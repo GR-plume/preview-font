@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Compare</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <input type="file" id="input_file" webkitdirectory>
+        <div id="box-list-container">
+            <div id="check-container">
+                <label v-for="(item,index) in filedata" class="check-label" :class="[index%2 === 0 ? 'even' : 'odd']"><input type="checkbox" name="font-check" :value="item.name"><span class="check-font-name">{{ item.name }}</span></label>
+            </div>
+            <div id="checked-list"></div>
+        </div>
+        <button onclick="setFont()">set font</button>
+        <button onclick="resetCheck()">reset check</button>
+        <div style="display: flex;white-space: nowrap;">
+            <div><div style="font-size: 12px;">テキスト</div><input type="text" id="input_text" style="width: 300px;"><button id="textChange">change</button></div>
+            <div style="margin-left: 6px;">
+                <div style="font-size: 12px;">フォントサイズ</div><input type="number" id="input_num" style="width: 50px;"><button id="sizeChange">change</button>
+                <button name="set-font-size" value="12">12px</button>
+                <button name="set-font-size" value="18">18px</button>
+                <button name="set-font-size" value="24">24px</button>
+                <button name="set-font-size" value="36">36px</button>
+                <button name="set-font-size" value="48">48px</button>
+                <button name="set-font-size" value="60">60px</button>
+                <button name="set-font-size" value="72">72px</button>
+            </div>
+        </div>
+        <table id="font-compare-table">
+            <tr v-for="item in filedata_2" :key="item.name">
+                <td class="font-file-name-td" :title="[item.name]"><div class="font-file-name">{{ item.name }}</div></td>
+                <td><div class="sampletext" :class="[item.classname]">{{ text }}</div></td>
+            </tr>
+        </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+    <script>
+        var filedata = [];
+        var sampletext = "あいうえおカキクケコ麒麟美しい世界Hello, World.";
+
+        var vm = new Vue({
+            el:'#app',
+            data:{
+                filedata:filedata,
+                filedata_2:[],
+                text:sampletext
+            }
+        });
+        
+        var csstext = '';
+
+        function addStyle(classname,path){
+            var fontfaceRule = `@font-face{font-family:'${classname}';src:url("../${path}");}`;
+            var fontclassRule = `.${classname}{font-family:'${classname}';}`;
+            csstext += (fontfaceRule + fontclassRule);
+        };
+
+        $('#input_file').on('change',function(){
+            for(let i = 0;i<this.files.length;i++){
+                var filename = this.files[i].name;
+                var extension = filename.slice(-4);
+                if(extension === ".otf"||extension === ".ttf"||extension === ".ttc"){
+                    var filepath = this.files[i].webkitRelativePath;
+                    var firstSlashIndex = _.findIndex([...filepath], o =>{return o === "/"});
+                    var filepath_upper = filepath.slice(firstSlashIndex +1);
+                    var classname = 'a' + filename.split('.').join('').split(' ').join('');
+                    filedata.push({name:filename,path:filepath_upper,classname:classname});
+                };
+            };        
+        });
+
+        $('#textChange').on('click',function(){
+            sampletext = $('#input_text').val();
+            vm.text = sampletext;
+        });
+        $('#sizeChange').on('click',function(){
+            $('.sampletext').css('font-size',`${$('#input_num').val()}px`);
+        });
+
+        var checkedfont = [];
+
+        vm.$watch(function(){return this.filedata},function(){
+            setlistener();
+            $('#font-compare-table > tbody').sortable({axis:"y"});
+        });
+
+        function setlistener(){
+            $('[name="font-check"]').on('change',function(){
+                checkedfont = [];
+                $('[name="font-check"]:checked').each(function(){
+                    checkedfont.push($(this).val());
+                });
+                setCheckedList();
+            });
+        };
+
+        function setCheckedList(){
+            let text = '';
+            for(item in checkedfont){
+                text += `${checkedfont[item]}\r\n`;
+            };
+            $('#checked-list').text(text);
+        };
+
+        var checkedIndex = [];
+
+        function takeChecked(){
+            checkedIndex = [];
+            for(item in checkedfont){
+                checkedIndex.push(_.findIndex(filedata,(o)=>{return o.name == checkedfont[item]}));
+            };
+        };
+
+        function setFont(){
+            takeChecked();
+            var filedata_2 = [];
+            csstext = '';
+            for(item in checkedIndex){
+                filedata_2.push(filedata[checkedIndex[item]]);
+            };
+            vm.filedata_2 = filedata_2;
+            for(item in filedata_2){
+                addStyle(filedata_2[item].classname,filedata_2[item].path);
+            };
+            if(csstext !== ''){
+                $('style').remove();
+                $('head').append(`<style>${csstext}</style>`);
+            };
+        };
+
+        function resetCheck(){
+            $('[name="font-check"]:checked').each(function(){
+                $(this).prop('checked',false);
+            });
+            checkedfont = [];
+            setCheckedList();
+        };
+
+        $('[name="set-font-size"]').on('click',function(){
+            $("#input_num").val(Number($(this).val()));
+            $("#sizeChange").trigger('click');
+        });
+    </script>
+</body>
+</html>

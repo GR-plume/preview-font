@@ -1,0 +1,68 @@
+#font-compare-table{
+    border-collapse: collapse;
+    margin-top: 5px;
+}
+#font-compare-table > tbody > tr > td{
+    border: solid 1px #000000;
+    margin: 2px 0;
+}
+.font-file-name-td{
+    width: 180px;
+    max-width: 180px;
+    overflow: hidden;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.font-file-name{
+    font-size: 12px;
+}
+
+.sampletext{
+    font-size: 36px;
+    white-space: nowrap;
+}
+
+.check-label{
+    font-size: 12px;
+}
+
+#check-container{
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    height: 250px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    white-space: nowrap;
+    border: solid 1px #000000;
+}
+
+.check-font-name{
+    padding: 0;
+    margin: 0;
+    position: relative;
+    top: -2px;
+}
+#checked-list{
+    white-space: pre;
+    border: solid 1px;
+    font-size: 12px;
+    min-width: 200px;
+}
+
+#box-list-container{
+    display: flex;
+}
+
+.check-label.odd{
+    background-color: #c5c5c5;
+}
+
+#font-compare-table > tbody > tr > td{
+    background-color: #ffffff;
+}
+
+[name="set-font-size"]{
+    font-size: 12px;
+}
